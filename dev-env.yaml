@@ -1,0 +1,51 @@
+#cloud-config
+package_upgrade: true
+packages:
+  - curl
+  - build-essential
+  - gh
+runcmd:
+  - find /etc/update-motd.d \( -type f -o -type l \) ! -name '00-header' -exec rm -f {} +
+write_files:
+  - path: /usr/bin/first_boot
+    content: |
+      #!/bin/bash
+      echo "Installing dependencies..."
+      curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+      echo "Login into github ..."
+      gh auth login
+      echo "Cloning the repository..."
+      gh repo clone eguezgustavo/ai-interactor-rust
+      echo "cd ai-interactor-rust" >> /home/ubuntu/.bashrc
+      cat /home/ubuntu/.ssh/authorized_host >> /home/ubuntu/.ssh/authorized_keys
+      echo "done" > /home/ubuntu/first_boot_done
+      clear
+      YELLOW='\033[0;33m'
+      NC='\033[0m'
+      echo -e "${YELLOW}Inizialitaion finished, exit the terminal and open it again${NC}"
+    permissions: '0755'
+  - path: /etc/update-motd.d/00-header
+    content: |
+      #!/bin/sh
+      echo "______ _   _ _____ _____       _                               "
+      echo "| ___ \ | | /  ___|_   _|     | |                              "
+      echo "| |_/ / | | \ \`--.  | |     __| | _____   __   ___ _ ____   __ "
+      echo "|    /| | | |\`--. \ | |    / _\` |/ _ \ \ / /  / _ \ '_ \ \ / / "
+      echo "| |\ \| |_| /\__/ / | |   | (_| |  __/\ V /  |  __/ | | \ V /  "
+      echo "\_| \_|\___/\____/  \_/    \__,_|\___| \_/    \___|_| |_|\_/   "
+
+      stamp="/var/lib/landscape/landscape-sysinfo.cache"
+      [ ! -r "$stamp" ] || sed -n '5,6p' "$stamp"
+
+      if [ ! -f "/home/ubuntu/first_boot_done" ]; then
+          Yellow='\033[0;33m'
+          Color_Off='\033[0m'
+
+          echo
+          echo $Yellow
+          echo "THIS IS THE FIRST TIME YOU OPEN THE SHELL, YOU MUST RUN first_boot TO BE ABLE TO USE THE DEV ENVIRONMENT"
+          echo $Color_Off
+          echo
+      fi
+    owner: 'root:root'
+    permissions: '0755'
