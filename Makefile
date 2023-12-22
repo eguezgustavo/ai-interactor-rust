@@ -10,3 +10,6 @@ dev/shell:
 
 dev/info:
 	@multipass ls | grep rust-test
+
+test:
+	@RUST_BACKTRACE=0 cargo test
